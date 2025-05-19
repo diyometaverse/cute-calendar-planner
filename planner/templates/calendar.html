@@ -134,11 +134,15 @@
   const form   = document.getElementById('eventForm');
   const saveOv = document.getElementById('saveOverlay');
 
-  function openModal(){
-    wrap.classList.remove('hidden');
-    back.classList.add('backdrop-show');
-    box.classList.add('modal-show');
-  }
+  function openModal () {
+  wrap.classList.remove('hidden');
+
+  back.classList.remove('backdrop-hide');
+  box.classList.remove('modal-hide');
+
+  back.classList.add('backdrop-show');
+  box.classList.add('modal-show');
+}
   function closeModal(){
     back.classList.remove('backdrop-show');
     box.classList.remove('modal-show');
