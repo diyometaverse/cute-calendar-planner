@@ -1,0 +1,51 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Love's Planner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+<body>
+<!-- Decorative elements -->
+    <div class="decoration top-10 left-10 heart">❤️</div>
+    <div class="decoration top-20 right-20 star">✨</div>
+    <div class="decoration bottom-10 left-20 heart">❤️</div>
+    <div class="decoration bottom-20 right-10 star">✨</div>
+
+    <!-- Login Page -->
+    <div id="loginPage" class="login-page">
+        <div class="login-container p-8">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-pink-500 pulse">Cute Planner</h1>
+                <p class="text-pink-400 mt-2">Your adorable task manager</p>
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-pink-500 mb-2 font-medium">Username</label>
+                <input type="text" id="username" class="cute-input w-full" placeholder="Enter your username">
+            </div>
+            
+            <div class="mb-8">
+                <label class="block text-pink-500 mb-2 font-medium">Password</label>
+                <input type="password" id="password" class="cute-input w-full" placeholder="Enter your password">
+            </div>
+            
+            <button id="loginButton" class="cute-button w-full">Login</button>
+            
+            <div class="text-center mt-6">
+                <p class="text-pink-400">Don't have an account? <a href="#" class="text-pink-500 font-medium">Sign up</a></p>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    document.getElementById("loginButton").addEventListener("click", () => {
+      window.location.href = "{% url 'planner:dashboard' %}";
+    });
+  </script>
+</html>

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Files – Cute Planner{% endblock %}
+{% block page %}
+    <!-- *** Files page markup (was #filesView) *** -->
+    <div class="flex justify-between items-center mb-6 md:mb-8 flex-wrap">
+        <h2 class="text-xl md:text-2xl font-bold text-pink-500 mb-2 md:mb-0">My Files</h2>
+        <button id="addFileBtn" class="cute-button flex items-center">
+            <!-- plus icon -->
+            Upload File
+        </button>
+    </div>
+
+    <div>
+        <div class="flex mb-4 space-x-2 overflow-x-auto pb-2">
+            <button id="fileListBtn"     class="tab-button active px-3 md:px-4 py-2 bg-blue-100 text-blue-500 rounded-lg text-sm font-medium whitespace-nowrap">List View</button>
+            <button id="fileCalendarBtn" class="tab-button px-3 md:px-4 py-2 bg-blue-100 text-blue-500 rounded-lg text-sm font-medium whitespace-nowrap">Calendar View</button>
+        </div>
+
+        <!-- list -->
+        <div id="fileListView" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- file cards dynamically inserted -->
+        </div>
+
+        <!-- calendar -->
+        <div id="fileCalendarView" class="hidden">
+            <div id="fileCalendar" class="h-[500px] md:h-[600px]"></div>
+        </div>
+    </div>
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'js/files.js' %}"></script>
+{% endblock %}

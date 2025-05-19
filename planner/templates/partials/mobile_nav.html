@@ -1,0 +1,22 @@
+{# same “active” var #}
+<div class="mobile-menu">
+    <a href="{% url 'planner:dashboard' %}"
+       class="mobile-menu-item {% if active == 'dashboard' %}active{% endif %}">
+        <!-- svg -->
+        <span>Dashboard111</span>
+    </a>
+    <a href="{% url 'planner:calendar' %}"
+       class="mobile-menu-item {% if active == 'calendar' %}active{% endif %}">
+        <!-- svg -->
+        <span>Calendar11</span>
+    </a>
+    <a href="{% url 'planner:files' %}"
+       class="mobile-menu-item {% if active == 'files' %}active{% endif %}">
+        <!-- svg -->
+        <span>Files</span>
+    </a>
+    {% comment %} <a href="{% url 'logout' %}" class="mobile-menu-item">
+        <!-- svg -->
+        <span>Logout</span>
+    </a> {% endcomment %}
+</div>

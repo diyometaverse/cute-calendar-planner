@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Calendar – Cute Planner{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'css/calendar.css' %}">
+  <style>
+    /* ───── extra styles for modal / loader / toast ───── */
+    /* backdrop fade */
+    @keyframes fadeInBD  { from{opacity:0;} to{opacity:1;} }
+    @keyframes fadeOutBD { from{opacity:1;} to{opacity:0;} }
+    .backdrop-show{animation:fadeInBD .25s forwards;}
+    .backdrop-hide{animation:fadeOutBD .25s forwards;}
+
+    /* modal pop */
+    @keyframes popIn  {0%{opacity:0;transform:scale(.9);}100%{opacity:1;transform:scale(1);}}
+    @keyframes popOut {0%{opacity:1;transform:scale(1);}100%{opacity:0;transform:scale(.9);}}
+    .modal-show{animation:popIn .25s forwards;}
+    .modal-hide{animation:popOut .2s forwards;}
+
+    /* small loader inside SAVE btn */
+    .loader::after{
+      content:'';
+      display:inline-block;
+      width:.9em;height:.9em;
+      border:2px solid currentColor;
+      border-top-color:transparent;
+      border-radius:50%;
+      animation:spin .7s linear infinite;
+    }
+    /* fullscreen loader */
+    .loader-big{
+      width:3rem;height:3rem;
+      border:4px solid #ff8fab;
+      border-top-color:transparent;
+      border-radius:50%;
+      animation:spin .8s linear infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg);}}
+
+    /* toast */
+    .toast{
+      position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);
+      background:#4ade80;color:#fff;padding:.5rem 1rem;border-radius:.5rem;
+      box-shadow:0 2px 6px rgba(0,0,0,.15);
+      animation:fadeInBD .2s,fadeOutBD .4s 2.6s forwards;
+      z-index:60;
+    }
+  </style>
+{% endblock %}
+
+{% block page %}
+<!-- Header & button -->
+<div class="flex justify-between items-center mb-6 md:mb-8 flex-wrap">
+  <h2 class="text-xl md:text-2xl font-bold text-pink-500 mb-2 md:mb-0">My Calendar</h2>
+  <button id="addEventBtn" class="cute-button flex items-center">Add&nbsp;Event</button>
+</div>
+
+<!-- Quick Calendar -->
+<section>
+  <h3 class="text-lg font-semibold text-pink-500 mb-4">Quick&nbsp;Calendar</h3>
+  <div class="bg-pink-100 p-4 rounded-lg">
+
+
+    <div class="flex mb-2 gap-2">
+        <button id="btn-today" class="view-btn">🌸 Click me for Today</button>
+
+        <div class="ml-auto flex gap-2">
+            <button id="btn-month" class="view-btn active">Month</button>
+            <button id="btn-week"  class="view-btn">Week</button>
+        </div>
+    </div>
+
+    <div id="calendar-wrapper" class="calendar-wrapper">
+      <div class="calendar-header">
+        <button id="prev" aria-label="Previous">❮</button>
+        <div id="title"></div>
+        <button id="next" aria-label="Next">❯</button>
+      </div>
+      <div id="day-names" class="calendar-grid day-names"></div>
+      <div id="dates"     class="calendar-grid"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ───── Add‑Event Modal ───── -->
+<div id="eventModal" class="fixed inset-0 z-50 hidden">
+  <div id="backDrop" class="absolute inset-0 bg-black/50 opacity-0"></div>
+
+  <div id="modalBox"
+       class="relative mx-auto mt-24 w-11/12 max-w-lg bg-white rounded-2xl shadow-xl p-6
+              scale-90 opacity-0">
+    <h3 class="text-lg font-bold text-pink-500 mb-4">New Event</h3>
+    <form id="eventForm" class="space-y-4">
+      <input required name="title" class="cute-input w-full" placeholder="Title">
+      <textarea name="desc" class="cute-input w-full" placeholder="Description"></textarea>
+      <div class="flex gap-4">
+        <input required type="date" name="start" class="cute-input flex-1">
+        <input type="date" name="end" class="cute-input flex-1" placeholder="End (optional)">
+      </div>
+      <input name="client" class="cute-input w-full" placeholder="Client">
+      <select name="priority" class="cute-input w-full">
+        <option value="urgent">Urgent</option>
+        <option value="mid">Medium</option>
+        <option value="low">Low</option>
+      </select>
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" id="cancelBtn"
+                class="cute-button bg-gray-200 text-gray-700">Cancel</button>
+        <button type="submit"
+                class="cute-button bg-pink-500 text-white">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- full‑page saving overlay -->
+<div id="saveOverlay"
+     class="fixed inset-0 z-40 hidden items-center justify-center bg-black/40">
+  <span class="loader-big"></span>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/calendar.js' %}"></script>
+<script>
+/* modal, overlay & toast */
+(function (){
+  const wrap   = document.getElementById('eventModal');
+  const back   = document.getElementById('backDrop');
+  const box    = document.getElementById('modalBox');
+  const addBtn = document.getElementById('addEventBtn');
+  const cancel = document.getElementById('cancelBtn');
+  const form   = document.getElementById('eventForm');
+  const saveOv = document.getElementById('saveOverlay');
+
+  function openModal(){
+    wrap.classList.remove('hidden');
+    back.classList.add('backdrop-show');
+    box.classList.add('modal-show');
+  }
+  function closeModal(){
+    back.classList.remove('backdrop-show');
+    box.classList.remove('modal-show');
+    back.classList.add('backdrop-hide');
+    box.classList.add('modal-hide');
+    setTimeout(()=>wrap.classList.add('hidden'),200);
+  }
+
+  addBtn.addEventListener('click',openModal);
+  cancel.addEventListener('click',closeModal);
+  back.addEventListener('click',closeModal);
+
+  /* submit: toast‑loader approach */
+form.addEventListener('submit',e=>{
+  e.preventDefault();
+
+  // make toast‑loader
+  const toast=document.createElement('div');
+  toast.className='toast-loader';
+  toast.innerHTML='<span class="spin"></span><span>Saving…</span>';
+  document.body.appendChild(toast);
+
+  // fake async save
+  setTimeout(()=>{
+    // mark as saved
+    toast.classList.add('saved');
+    toast.querySelector('span:last-child').textContent='Saved!';
+  },1500);
+
+  // remove after another 2 s
+  setTimeout(()=>{
+    toast.style.opacity='0';
+    setTimeout(()=>toast.remove(),300);        // wait for fade
+  },3500);
+
+  // reset & close modal immediately or after save? – here we close on save
+  setTimeout(()=>{
+    form.reset();
+    closeModal();
+  },1500);
+});
+
+  function toast(msg){
+    const t=document.createElement('div');
+    t.className='toast';
+    t.textContent=msg;
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(),3000);
+  }
+})();
+</script>
+{% endblock %}

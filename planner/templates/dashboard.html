@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% load static %}
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/calendar.css' %}">
+{% endblock %}
+{% block title %}Dashboard – Cute Planner{% endblock %}
+
+{% block page %}
+    <!-- ******** Dashboard page (was #dashboardView) ******** -->
+    <div class="flex justify-between items-center mb-6 md:mb-8 flex-wrap">
+        <h2 class="text-xl md:text-2xl font-bold text-pink-500 mb-2 md:mb-0">
+            My&nbsp;Dashboard
+        </h2>
+
+        <span class="bg‑pink‑100 text‑pink‑500 text-sm font-medium px-3 py-1 rounded-full">
+            <span id="currentDate"></span>
+        </span>
+    </div>
+
+    <!--‑‑‑ Upcoming tasks ‑‑‑-->
+    <section class="mb-6 md:mb-8">
+  <h3 class="text-lg font-semibold text-pink-500 mb-4">
+    Upcoming&nbsp;Tasks
+  </h3>
+
+  <!-- Scrollable wrapper (~5 cards tall) -->
+  <div class="space-y-3 max-h-[23rem] overflow-y-auto pr-1">
+
+    <!-- Task 1 -->
+    <div class="task-card p-4 slide-in">
+      <div class="flex justify-between items-start flex-wrap">
+        <div class="mb-2 md:mb-0">
+          <h4 class="font-semibold text-gray-800">Project Kick‑off</h4>
+          <p class="text-sm text-gray-600 mt-1">Initial team meeting</p>
+          <p class="text-xs text-pink-500 mt-2">Client:&nbsp;Acme Corp</p>
+        </div>
+        <div class="text-right">
+          <p class="text-sm font-medium text-gray-700">Mon,&nbsp;Jun&nbsp;2</p>
+          <p class="text-xs text-gray-500">9:00&nbsp;AM</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Task 2 -->
+    <div class="task-card p-4 slide-in" style="animation-delay:0.1s">
+      <div class="flex justify-between items-start flex-wrap">
+        <div class="mb-2 md:mb-0">
+          <h4 class="font-semibold text-gray-800">Design Review</h4>
+          <p class="text-sm text-gray-600 mt-1">Approve wireframes</p>
+          <p class="text-xs text-pink-500 mt-2">Team:&nbsp;UI/UX</p>
+        </div>
+        <div class="text-right">
+          <p class="text-sm font-medium text-gray-700">Tue,&nbsp;Jun&nbsp;3</p>
+          <p class="text-xs text-gray-500">1:30&nbsp;PM</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Task 3 -->
+    <div class="task-card p-4 slide-in" style="animation-delay:0.2s">
+      <div class="flex justify-between items-start flex-wrap">
+        <div class="mb-2 md:mb-0">
+          <h4 class="font-semibold text-gray-800">Content Draft</h4>
+          <p class="text-sm text-gray-600 mt-1">Write blog outline</p>
+          <p class="text-xs text-pink-500 mt-2">Owner:&nbsp;Alex</p>
+        </div>
+        <div class="text-right">
+          <p class="text-sm font-medium text-gray-700">Wed,&nbsp;Jun&nbsp;4</p>
+          <p class="text-xs text-gray-500">All day</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Task 4 -->
+    <div class="task-card p-4 slide-in" style="animation-delay:0.3s">
+      <div class="flex justify-between items-start flex-wrap">
+        <div class="mb-2 md:mb-0">
+          <h4 class="font-semibold text-gray-800">Client Call</h4>
+          <p class="text-sm text-gray-600 mt-1">Weekly status update</p>
+          <p class="text-xs text-pink-500 mt-2">Client:&nbsp;Bright Ideas</p>
+        </div>
+        <div class="text-right">
+          <p class="text-sm font-medium text-gray-700">Thu,&nbsp;Jun&nbsp;5</p>
+          <p class="text-xs text-gray-500">4:00&nbsp;PM</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Task 5 -->
+    <div class="task-card p-4 slide-in" style="animation-delay:0.4s">
+      <div class="flex justify-between items-start flex-wrap">
+        <div class="mb-2 md:mb-0">
+          <h4 class="font-semibold text-gray-800">Invoice Reminder</h4>
+          <p class="text-sm text-gray-600 mt-1">Send June invoices</p>
+          <p class="text-xs text-pink-500 mt-2">Finance&nbsp;Dept</p>
+        </div>
+        <div class="text-right">
+          <p class="text-sm font-medium text-gray-700">Fri,&nbsp;Jun&nbsp;6</p>
+          <p class="text-xs text-gray-500">11:00&nbsp;AM</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/dashboard.js' %}"></script>
+<script src="{% static 'js/calendar.js' %}"></script>
+
+{% endblock %}

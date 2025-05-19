@@ -1,0 +1,56 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Cute Planner{% endblock %}</title>
+
+    <!-- global libs / assets -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js" defer></script>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="font-[Quicksand]">
+
+    <!-- decorative floating hearts / stars -->
+    <div class="decoration top-10 left-10 heart">❤️</div>
+    <div class="decoration top-20 right-20 star">✨</div>
+    <div class="decoration bottom-10 left-20 heart">❤️</div>
+    <div class="decoration bottom-20 right-10 star">✨</div>
+
+    <!-- ************************* main app ************************* -->
+    <div class="app-page" id="appPage">
+        <div class="app-container mx-auto my-0 md:my-4 lg:my-8 max-w-7xl">
+            <div class="flex flex-col md:flex-row min-h-screen">
+
+                <!-- ---------- sidebar ---------- -->
+               <aside class="sidebar hidden md:flex md:w-64 p-6 flex-col">
+                    {% include "partials/sidebar.html" %}
+                </aside>
+
+                <!-- ---------- page content ---------- -->
+                <main class="flex-grow p-4 md:p-6 bg-white rounded-none md:rounded-r-2xl">
+                    {% block page %}{% endblock %}
+                </main>
+
+            </div>
+        </div>
+
+        <!-- ---------- mobile nav ---------- -->
+        {% include "partials/mobile_nav.html" %}
+    </div>
+
+    <!-- ---------- global modals ---------- -->
+    {% comment %} {% include "partials/event_modal.html" %}
+    {% include "partials/file_modal.html" %} {% endcomment %}
+
+    <!-- ---------- scripts ---------- -->
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
