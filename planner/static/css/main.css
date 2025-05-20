@@ -1,4 +1,4 @@
-
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600&display=swap');
 body {
     font-family: 'Quicksand', sans-serif;
     background-color: #fff5f7;
@@ -390,4 +390,43 @@ body {
     bottom:50%;            /* vertical middle */
     transform:translate(-50%,50%);  /* center both axes */
   }
+}
+
+.loader-love{
+  font-family:'Baloo 2',cursive;
+  font-size:3rem;                 /* size of the word */
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  display:inline-block;
+  line-height:1;
+  
+  /* gradient that will slide inside the text */
+  background:linear-gradient(120deg,#ff9ec4,#ffd3e4,#ff9ec4) 0 0 /200% 100%;
+  -webkit-background-clip:text;
+          background-clip:text;
+  color:transparent;
+
+  animation: love-fill 1.8s linear infinite;
+}
+
+@keyframes love-fill{
+  0%   { background-position: 0% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* keep previous “show” utility */
+#pageLoader.show{display:flex}
+
+.prio-glow{
+  font-weight:600;
+  animation:glow 1s ease-in-out infinite alternate;
+}
+
+.prio-urgent{ color:#ef4444; }   /* red    */
+.prio-mid   { color:#f59e0b; }   /* amber  */
+.prio-low   { color:#10b981; }   /* green  */
+
+@keyframes glow{
+  from{text-shadow:0 0 .15rem currentColor,0 0 .3rem currentColor;}
+  to  {text-shadow:0 0 .4rem currentColor,0 0 .8rem currentColor;}
 }

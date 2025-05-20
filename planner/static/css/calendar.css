@@ -81,3 +81,21 @@
   font-weight: bold;
 }
 
+.date-dot{
+  position:absolute;               /* sit inside the cell */
+  bottom:4px; left:50%;
+  width:6px; height:6px;
+  border-radius:50%;
+  transform:translateX(-50%);
+}
+.dot-urgent{ background:#ef4444; }   /* red   */
+.dot-mid   { background:#ef4444; }   /* amber */
+.dot-low   { background:#ef4444; }   /* green */
+
+#dayPop::before{           /* little arrow */
+  content:"";
+  position:absolute;top:-6px;left:calc(50% - 6px);
+  width:12px;height:12px;
+  background:white;transform:rotate(45deg);
+  box-shadow:-2px -2px 5px rgba(0,0,0,.05);
+}

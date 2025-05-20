@@ -92,12 +92,13 @@
               scale-90 opacity-0">
     <h3 class="text-lg font-bold text-pink-500 mb-4">New Event</h3>
     <form id="eventForm" class="space-y-4">
+         {% csrf_token %}
       <input required name="title" class="cute-input w-full" placeholder="Title">
       <textarea name="desc" class="cute-input w-full" placeholder="Description"></textarea>
-      <div class="flex gap-4">
-        <input required type="date" name="start" class="cute-input flex-1">
-        <input type="date" name="end" class="cute-input flex-1" placeholder="End (optional)">
-      </div>
+        <div class="flex flex-col gap-4 sm:flex-row">
+            <input required type="date" name="start" class="cute-input flex-1">
+            <input type="date"   name="end"   class="cute-input flex-1" placeholder="End (optional)">
+        </div>
       <input name="client" class="cute-input w-full" placeholder="Client">
       <select name="priority" class="cute-input w-full">
         <option value="urgent">Urgent</option>
@@ -114,6 +115,29 @@
   </div>
 </div>
 
+<div id="eventsModal" class="fixed inset-0 z-40 hidden">
+  <!-- dark backdrop -->
+  <div id="eventsBD"
+       class="absolute inset-0 bg-black/40 opacity-0"></div>
+
+  <!-- white card -->
+  <div id="eventsBox"
+       class="relative mx-auto mt-24 w-11/12 max-w-md bg-white rounded-2xl
+              shadow-xl p-6 scale-90 opacity-0">
+    <h3 id="eventsTitle" class="text-lg font-bold text-pink-500 mb-4">
+      <!-- filled by JS -->
+    </h3>
+    <div id="eventsBody" class="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+      <!-- items injected by JS -->
+    </div>
+
+    <button id="eventsClose"
+            class="cute-button mt-6 bg-gray-200 text-gray-700 w-full">
+      Close
+    </button>
+  </div>
+</div>
+
 <!-- full‑page saving overlay -->
 <div id="saveOverlay"
      class="fixed inset-0 z-40 hidden items-center justify-center bg-black/40">
@@ -122,75 +146,102 @@
 {% endblock %}
 
 {% block scripts %}
+<script>
+  const EVENTS = {{ events_json|safe }};
+</script>
 <script src="{% static 'js/calendar.js' %}"></script>
 <script>
-/* modal, overlay & toast */
-(function (){
-  const wrap   = document.getElementById('eventModal');
-  const back   = document.getElementById('backDrop');
-  const box    = document.getElementById('modalBox');
-  const addBtn = document.getElementById('addEventBtn');
-  const cancel = document.getElementById('cancelBtn');
-  const form   = document.getElementById('eventForm');
-  const saveOv = document.getElementById('saveOverlay');
+(function () {
+  const wrap   = document.getElementById("eventModal");
+  const back   = document.getElementById("backDrop");
+  const box    = document.getElementById("modalBox");
+  const addBtn = document.getElementById("addEventBtn");
+  const cancel = document.getElementById("cancelBtn");
+  const form   = document.getElementById("eventForm");
+  const saveBtn= form.querySelector('button[type="submit"]');
 
+  /* ───── open / close helpers ───── */
   function openModal () {
-  wrap.classList.remove('hidden');
-
-  back.classList.remove('backdrop-hide');
-  box.classList.remove('modal-hide');
-
-  back.classList.add('backdrop-show');
-  box.classList.add('modal-show');
-}
-  function closeModal(){
-    back.classList.remove('backdrop-show');
-    box.classList.remove('modal-show');
-    back.classList.add('backdrop-hide');
-    box.classList.add('modal-hide');
-    setTimeout(()=>wrap.classList.add('hidden'),200);
+    wrap.classList.remove("hidden");
+    back.classList.remove("backdrop-hide");
+    box.classList.remove("modal-hide");
+    back.classList.add("backdrop-show");
+    box.classList.add("modal-show");
+  }
+  function closeModal () {
+    back.classList.remove("backdrop-show");
+    box.classList.remove("modal-show");
+    back.classList.add("backdrop-hide");
+    box.classList.add("modal-hide");
+    setTimeout(()=>wrap.classList.add("hidden"),200);
   }
 
-  addBtn.addEventListener('click',openModal);
-  cancel.addEventListener('click',closeModal);
-  back.addEventListener('click',closeModal);
+  addBtn.addEventListener("click", openModal);
+  cancel.addEventListener("click", closeModal);
+  back  .addEventListener("click", closeModal);
 
-  /* submit: toast‑loader approach */
-form.addEventListener('submit',e=>{
-  e.preventDefault();
+  /* ───── real submit ───── */
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-  // make toast‑loader
-  const toast=document.createElement('div');
-  toast.className='toast-loader';
-  toast.innerHTML='<span class="spin"></span><span>Saving…</span>';
-  document.body.appendChild(toast);
+    // ─ add spinner state to Save button
+    saveBtn.classList.add("loader");
+    saveBtn.disabled = true;
 
-  // fake async save
-  setTimeout(()=>{
-    // mark as saved
-    toast.classList.add('saved');
-    toast.querySelector('span:last-child').textContent='Saved!';
-  },1500);
+    // gather data
+    const fd   = new FormData(form);
+    const body = {
+      title:    fd.get("title"),
+      desc:     fd.get("desc"),
+      start:    fd.get("start"),
+      end:      fd.get("end") || null,
+      client:   fd.get("client"),
+      priority: fd.get("priority"),
+    };
 
-  // remove after another 2 s
-  setTimeout(()=>{
-    toast.style.opacity='0';
-    setTimeout(()=>toast.remove(),300);        // wait for fade
-  },3500);
+    try {
+    const resp = await fetch("{% url 'planner:event-create' %}", {
+      method:  "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken":  fd.get("csrfmiddlewaretoken"),
+      },
+      body: JSON.stringify(body),
+    });
 
-  // reset & close modal immediately or after save? – here we close on save
-  setTimeout(()=>{
+    if (!resp.ok) throw new Error(await resp.text());
+
+    /* ───── success ───── */
+    toast("Saved!");
     form.reset();
     closeModal();
-  },1500);
-});
 
-  function toast(msg){
-    const t=document.createElement('div');
-    t.className='toast';
-    t.textContent=msg;
+    /* 🔄 refresh the calendar */
+    if (typeof refreshCalendar === "function") {
+        // 1) ask the server only for the dots (lightweight)
+        //    – OR simply call your existing helper
+        await refreshCalendar();              // << existing helper
+    } else {
+        // 2) if that helper does not exist, reload the whole page
+        window.location.reload();
+    }
+
+  } catch (err) {
+    toast("Error: " + err.message);
+  } finally {
+    saveBtn.classList.remove("loader");
+    saveBtn.disabled = false;
+  }
+  });
+
+  /* ───── tiny toast helper ───── */
+  function toast(msg) {
+    const t = Object.assign(document.createElement("div"), {
+      className: "toast",
+      textContent: msg
+    });
     document.body.appendChild(t);
-    setTimeout(()=>t.remove(),3000);
+    setTimeout(() => t.remove(), 3000);
   }
 })();
 </script>

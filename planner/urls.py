@@ -21,8 +21,8 @@ from . import views
 app_name = 'planner'
 
 urlpatterns = [
-    path('', views.index, name='login'),
-    path('dashboard/', views.dashboard_view, name='dashboard'),
+    path('', views.dashboard_view, name='dashboard'),
     path('calendar/', views.calendar_view,  name='calendar'),
     path('files/',    views.files_view,     name='files'),
+    path("calendar/create/", views.create_event, name="event-create"),
 ]
