@@ -13,7 +13,12 @@
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
-    
+   <script src="https://unpkg.com/lucide@latest"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    if (window.lucide) lucide.createIcons();
+  });
+</script>
     {% block extra_head %}{% endblock %}
 </head>
 <body class="font-[Quicksand]">
@@ -52,6 +57,7 @@
 
     <!-- ---------- scripts ---------- -->
     <script src="{% static 'js/main.js' %}"></script>
+
     {% block scripts %}{% endblock %}
 
     <div id="pageLoader"

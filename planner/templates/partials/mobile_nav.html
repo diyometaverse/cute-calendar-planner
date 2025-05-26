@@ -2,25 +2,25 @@
 <div class="mobile-menu">
     <a href="{% url 'planner:dashboard' %}"
        class="mobile-menu-item {% if active == 'dashboard' %}active{% endif %}">
-        <span class="icon">🏡</span>
+        <span class="icon"><svg data-lucide="home" class="w-6 h-6"></svg></span>
         <span class="label">Dashboard</span>
     </a>
 
     <a href="{% url 'planner:calendar' %}"
        class="mobile-menu-item {% if active == 'calendar' %}active{% endif %}">
-        <span class="icon">🗓️</span>
+        <span class="icon"><svg data-lucide="calendar" class="w-6 h-6"></svg></span>
         <span class="label">Calendar</span>
     </a>
 
     <a href="{% url 'planner:files' %}"
        class="mobile-menu-item {% if active == 'files' %}active{% endif %}">
-        <span class="icon">🌷</span>
+        <span class="icon"><svg data-lucide="folder" class="w-6 h-6"></svg></span>
         <span class="label">Files</span>
     </a>
 
-    <a href=""
-       class="mobile-menu-item">
-        <span class="icon">⚙️</span>
+    <a href="{% url 'planner:settings' %}"
+       class="mobile-menu-item {% if active == 'settings' %}active{% endif %}">
+        <span class="icon"><svg data-lucide="settings" class="w-6 h-6"></svg></span>
         <span class="label">Settings</span>
     </a>
 </div>

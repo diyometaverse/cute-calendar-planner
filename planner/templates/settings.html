@@ -1,0 +1,563 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Settings – Cute Planner{% endblock %}
+
+{% block page %}
+<style>
+.toast {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgb(236 72 153);  /* pink-500 */
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translate(-50%, 100%);
+        opacity: 0;
+    }
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+}
+</style>
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8">
+        <h2 class="text-xl md:text-2xl font-bold text-pink-500">Settings</h2>
+        <a href="{% url 'logout' %}" 
+           class="flex items-center gap-1 px-4 py-2 bg-red-300 hover:bg-pink-500 text-gray-700 rounded-lg transition-colors">
+            <svg data-lucide="log-out" class="w-4 h-4"></svg>
+            <span>Logout</span>
+        </a>
+    </div>
+
+    <!-- Profile Section -->
+    <div class="bg-white p-6 rounded-xl shadow-sm mb-8">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-semibold text-pink-500 flex items-center gap-2">
+                <svg data-lucide="user" class="w-5 h-5"></svg> Profile Information
+            </h3>
+            <button onclick="toggleEdit('profile')" class="text-sm text-pink-500 hover:underline flex items-center gap-1">
+                <svg data-lucide="edit" class="w-4 h-4"></svg> Edit Profile
+            </button>
+        </div>
+        
+        <!-- View Mode -->
+        <div id="profile-view" class="flex flex-col md:flex-row gap-6">
+            <!-- Profile Image -->
+            <div class="flex flex-col items-center">
+                <div class="w-32 h-32 rounded-full bg-pink-50 border-4 border-pink-100 overflow-hidden">
+                    {% if user.profile_image %}
+                        <img src="{{ user.profile_image.url }}" alt="Profile" class="w-full h-full object-cover">
+                    {% else %}
+                        <svg data-lucide="user" class="w-full h-full p-6 text-pink-300"></svg>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- User Info -->
+            <div class="flex-1 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500">Name</label>
+                        <p class="mt-1">{{ user.get_full_name|default:"Not set" }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500">Username</label>
+                        <p class="mt-1">{{ user.username }}</p>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-500">Email</label>
+                    <p class="mt-1">{{ user.email }}</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-500">Member Since</label>
+                    <p class="mt-1">{{ user.date_joined|date:'F j, Y' }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Mode -->
+        <form id="profile-edit" class="hidden" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="flex flex-col md:flex-row gap-6">
+                <!-- Profile Image Edit -->
+                <div class="flex flex-col items-center">
+                    <div class="w-32 h-32 rounded-full bg-pink-50 border-4 border-pink-100 overflow-hidden mb-2">
+                        {% if user.profile_image %}
+                            <img src="{{ user.profile_image.url }}" alt="Profile" class="w-full h-full object-cover">
+                        {% else %}
+                            <svg data-lucide="user" class="w-full h-full p-6 text-pink-300"></svg>
+                        {% endif %}
+                    </div>
+                    <button type="button" onclick="document.getElementById('profileImage').click()" 
+                            class="text-sm text-pink-500 hover:underline">
+                        Change Photo
+                    </button>
+                    <input type="file" id="profileImage" name="profile_image" class="hidden" accept="image/*">
+                </div>
+
+                <!-- User Info Edit -->
+                <div class="flex-1 space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">First Name</label>
+                            <input type="text" name="first_name" value="{{ user.first_name }}" 
+                                   class="cute-input w-full mt-1">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Last Name</label>
+                            <input type="text" name="last_name" value="{{ user.last_name }}" 
+                                   class="cute-input w-full mt-1">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" name="email" value="{{ user.email }}"
+                               class="cute-input w-full mt-1">
+                    </div>
+                    <div class="flex justify-end gap-2">
+                        <button type="button" onclick="toggleEdit('profile')" 
+                                class="px-4 py-2 text-gray-600 hover:text-gray-800">
+                            Cancel
+                        </button>
+                        <button type="submit" class="cute-button">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Password Section -->
+    <div class="bg-white p-6 rounded-xl shadow-sm mb-8">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-semibold text-pink-500 flex items-center gap-2">
+                <svg data-lucide="key" class="w-5 h-5"></svg> Password
+            </h3>
+            <button onclick="toggleEdit('password')" class="text-sm text-pink-500 hover:underline flex items-center gap-1">
+                <svg data-lucide="edit" class="w-4 h-4"></svg> Change Password
+            </button>
+        </div>
+
+        <form id="password-edit" class="hidden space-y-4 max-w-md">
+            {% csrf_token %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Current Password</label>
+                <input type="password" name="current_password" class="cute-input w-full mt-1" required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">New Password</label>
+                <input type="password" name="new_password" class="cute-input w-full mt-1" required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Confirm New Password</label>
+                <input type="password" name="confirm_password" class="cute-input w-full mt-1" required>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="toggleEdit('password')" 
+                        class="px-4 py-2 text-gray-600 hover:text-gray-800">
+                    Cancel
+                </button>
+                <button type="submit" class="cute-button">Update Password</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Clients Section -->
+    <div class="bg-white p-6 rounded-xl shadow-sm">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-pink-500 flex items-center gap-2">
+                <svg data-lucide="users" class="w-5 h-5"></svg> My Clients
+            </h3>
+            <button onclick="openClientModal()" class="cute-button">
+                <svg data-lucide="user-plus" class="w-4 h-4 mr-1 inline-block"></svg> 
+                Add Client
+            </button>
+        </div>
+        
+        <!-- Replace your existing client cards with this -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for client in clients %}
+            <div class="p-4 rounded-lg {% if client.is_active %}bg-pink-50{% else %}bg-gray-50{% endif %} 
+            border {% if client.is_active %}border-pink-100{% else %}border-gray-200{% endif %} relative group">
+                <!-- Edit/Active toggle buttons -->
+                <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onclick="editClient({{ client.id }})" 
+                            class="p-1 text-gray-400 hover:text-pink-500">
+                        <svg data-lucide="edit" class="w-4 h-4"></svg>
+                    </button>
+                    <button onclick="toggleClientActive({{ client.id }})"
+                            class="p-1 text-gray-400 {% if client.is_active %}hover:text-red-500{% else %}hover:text-green-500{% endif %}">
+                        <svg data-lucide="{% if client.is_active %}user-x{% else %}user-check{% endif %}" class="w-4 h-4"></svg>
+                    </button>
+                </div>
+
+                <div class="flex items-start justify-between">
+                    <h4 class="font-semibold {% if client.is_active %}text-pink-600{% else %}text-gray-500{% endif %}">
+                        {{ client.name }}
+                    </h4>
+                    {% if not client.is_active %}
+                    <span class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Inactive</span>
+                    {% endif %}
+                </div>
+                <p class="text-sm text-gray-600 mt-1">{{ client.email }}</p>
+                <p class="text-sm text-gray-600">{{ client.phone }}</p>
+                <p class="text-xs text-gray-500 mt-2">Added: {{ client.created_at|date:"M d, Y" }}</p>
+            </div>
+            {% empty %}
+            <p class="text-gray-500 col-span-full text-center py-4">
+                No clients added yet
+            </p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Add Client Modal -->
+<div id="clientModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+    <div class="w-full h-full flex justify-center items-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-xl shadow-lg p-6 relative">
+            <button onclick="closeClientModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <svg data-lucide="x" class="w-5 h-5"></svg>
+            </button>
+
+            <h3 class="text-lg font-bold text-pink-500 mb-4">Add New Client</h3>
+            <form id="addClientForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Name</label>
+                    <input type="text" name="name" class="cute-input w-full mt-1" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" name="email" class="cute-input w-full mt-1">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Phone</label>
+                    <input type="tel" name="phone" class="cute-input w-full mt-1">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Address</label>
+                    <textarea name="address" class="cute-input w-full mt-1 resize-none" rows="2"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Notes</label>
+                    <textarea name="notes" class="cute-input w-full mt-1 resize-none" rows="2"></textarea>
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" name="is_active" checked id="is_active" class="rounded border-gray-300 text-pink-500 focus:ring-pink-500">
+                    <label for="is_active" class="text-sm text-gray-700">Active Client</label>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeClientModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">
+                        Cancel
+                    </button>
+                    <button type="submit" class="cute-button">Add Client</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Client Modal -->
+<div id="editClientModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+    <div class="w-full h-full flex justify-center items-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-xl shadow-lg p-6 relative">
+            <button onclick="closeEditModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <svg data-lucide="x" class="w-5 h-5"></svg>
+            </button>
+
+            <h3 class="text-lg font-bold text-pink-500 mb-4">Edit Client</h3>
+            <form id="editClientForm" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="client_id" id="edit_client_id">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Name</label>
+                    <input type="text" name="name" id="edit_name" class="cute-input w-full mt-1" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" name="email" id="edit_email" class="cute-input w-full mt-1">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Phone</label>
+                    <input type="tel" name="phone" id="edit_phone" class="cute-input w-full mt-1">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Address</label>
+                    <textarea name="address" id="edit_address" class="cute-input w-full mt-1 resize-none" rows="2"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Notes</label>
+                    <textarea name="notes" id="edit_notes" class="cute-input w-full mt-1 resize-none" rows="2"></textarea>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeEditModal()" 
+                            class="px-4 py-2 text-gray-600 hover:text-gray-800">
+                        Cancel
+                    </button>
+                    <button type="submit" class="cute-button">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const clientModal = document.getElementById('clientModal');
+    const editClientModal = document.getElementById('editClientModal');
+    const editClientForm = document.getElementById('editClientForm');
+    const passwordForm = document.getElementById('password-edit');
+
+    // Add these functions
+    window.openClientModal = function() {
+        clientModal.classList.remove('hidden');
+    }
+    
+    window.closeClientModal = function() {
+        clientModal.classList.add('hidden');
+        document.getElementById('addClientForm').reset(); // Reset form
+    }
+
+    // Close edit modal
+    window.closeEditModal = function() {
+        editClientModal.classList.add('hidden');
+        editClientForm.reset();
+    }
+
+    // Add toggle edit function
+    window.toggleEdit = function(section) {
+        const viewEl = document.getElementById(`${section}-view`);
+        const editEl = document.getElementById(`${section}-edit`);
+        
+        if (viewEl) {
+            viewEl.classList.toggle('hidden');
+        }
+        
+        if (editEl) {
+            editEl.classList.toggle('hidden');
+            if (!editEl.classList.contains('hidden')) {
+                // Focus first input when showing edit form
+                const firstInput = editEl.querySelector('input:not([type="hidden"])');
+                if (firstInput) firstInput.focus();
+            }
+        }
+    }
+
+    // Add toast function
+    function showToast(message, icon = 'check') {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerHTML = `
+            <svg data-lucide="${icon}" class="w-5 h-5"></svg>
+            <span>${message}</span>
+        `;
+        document.body.appendChild(toast);
+        
+        // Initialize the Lucide icon
+        if (window.lucide) lucide.createIcons();
+        
+        // Remove toast after 3 seconds
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // Add this validation function
+    function showErrorToast(message) {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.style.backgroundColor = '#ef4444'; // red-500
+        toast.innerHTML = `
+            <svg data-lucide="alert-circle" class="w-5 h-5"></svg>
+            <span>${message}</span>
+        `;
+        document.body.appendChild(toast);
+        
+        if (window.lucide) lucide.createIcons();
+        
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // Update your form submit handler
+    document.getElementById('addClientForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const form = e.target;
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch("{% url 'planner:add_client' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showToast('Client added successfully!', 'check');
+                closeClientModal();
+                location.reload();  // or dynamically update the UI
+            } else {
+                showToast('Failed to add client. Check the inputs.', 'alert-circle');
+                console.error(data.errors);
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            showToast('Something went wrong.', 'x-circle');
+        }
+
+    });
+
+    // Edit client function
+    window.editClient = async function(clientId) {
+        try {
+            const response = await fetch(`/clients/${clientId}`);
+            const data = await response.json();
+            
+            // Fill the form with client data
+            document.getElementById('edit_client_id').value = data.id;
+            document.getElementById('edit_name').value = data.name;
+            document.getElementById('edit_email').value = data.email;
+            document.getElementById('edit_phone').value = data.phone;
+            document.getElementById('edit_address').value = data.address;
+            document.getElementById('edit_notes').value = data.notes;
+            
+            // Show the modal
+            editClientModal.classList.remove('hidden');
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Failed to load client data', 'x-circle');
+        }
+    }
+
+    // Handle edit form submission
+    editClientForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const clientId = document.getElementById('edit_client_id').value;
+        const formData = new FormData(this);
+
+        try {
+            const response = await fetch(`/clients/${clientId}/edit/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showToast('Client updated successfully!', 'check');
+                closeEditModal();
+                location.reload(); // or update UI dynamically
+            } else {
+                showToast('Failed to update client', 'alert-circle');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Something went wrong', 'x-circle');
+        }
+    });
+
+    // Add this to your existing DOMContentLoaded event listener
+    passwordForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        try {
+            const response = await fetch("{% url 'planner:change_password' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showToast('Password updated successfully!', 'check');
+                toggleEdit('password');
+                this.reset();
+            } else {
+                showToast(data.message || 'Failed to update password', 'alert-circle');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Something went wrong', 'x-circle');
+        }
+    });
+
+    // Replace the deleteClient function with this:
+    window.toggleClientActive = async function(clientId) {
+        try {
+            const response = await fetch(`/clients/${clientId}/toggle-active/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showToast(
+                    `Client ${data.is_active ? 'activated' : 'deactivated'} successfully!`, 
+                    data.is_active ? 'check' : 'user-x'
+                );
+                location.reload(); // or update UI dynamically
+            } else {
+                showToast('Failed to update client status', 'alert-circle');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Something went wrong', 'x-circle');
+        }
+    }
+
+    // Close modal on backdrop click
+    clientModal.addEventListener('click', function(e) {
+        if (e.target === clientModal) {
+            closeClientModal();
+        }
+    });
+
+    editClientModal.addEventListener('click', function(e) {
+        if (e.target === editClientModal) {
+            closeEditModal();
+        }
+    });
+
+    if (window.lucide) lucide.createIcons();
+});
+</script>
+{% endblock %}

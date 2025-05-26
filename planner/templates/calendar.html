@@ -95,11 +95,25 @@
          {% csrf_token %}
       <input required name="title" class="cute-input w-full" placeholder="Title">
       <textarea name="desc" class="cute-input w-full" placeholder="Description"></textarea>
-        <div class="flex flex-col gap-4 sm:flex-row">
-            <input required type="date" name="start" class="cute-input flex-1">
-            <input type="date"   name="end"   class="cute-input flex-1" placeholder="End (optional)">
+      <div class="flex flex-col gap-4">
+        <div class="flex-1">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+          <input required type="date" name="start" class="cute-input w-full">
         </div>
-      <input name="client" class="cute-input w-full" placeholder="Client">
+        <div class="flex-1">
+          <label class="block text-sm font-medium text-gray-700 mb-1">End Date (Optional)</label>
+          <input type="date" name="end" class="cute-input w-full">
+        </div>
+      </div>
+      <div class="flex-1">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Client *</label>
+        <select name="client" class="cute-input w-full" required>
+            <option value="">Select a Client</option>
+            {% for client in clients %}
+                <option value="{{ client.name }}">{{ client.name }}</option>
+            {% endfor %}
+        </select>
+      </div>
       <select name="priority" class="cute-input w-full">
         <option value="urgent">Urgent</option>
         <option value="mid">Medium</option>
@@ -118,7 +132,7 @@
 <div id="eventsModal" class="fixed inset-0 z-40 hidden">
   <!-- dark backdrop -->
   <div id="eventsBD"
-       class="absolute inset-0 bg-black/40 opacity-0"></div>
+       class="absolute inset-0 bg-black opacity-0"></div>
 
   <!-- white card -->
   <div id="eventsBox"
@@ -167,12 +181,16 @@
     box.classList.remove("modal-hide");
     back.classList.add("backdrop-show");
     box.classList.add("modal-show");
+     // Disable scrolling
+    document.body.style.overflow = 'hidden';
   }
   function closeModal () {
     back.classList.remove("backdrop-show");
     box.classList.remove("modal-show");
     back.classList.add("backdrop-hide");
     box.classList.add("modal-hide");
+    // Re-enable scrolling
+    document.body.style.overflow = '';
     setTimeout(()=>wrap.classList.add("hidden"),200);
   }
 

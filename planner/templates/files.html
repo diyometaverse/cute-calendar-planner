@@ -2,32 +2,256 @@
 {% load static %}
 {% block title %}Files – Cute Planner{% endblock %}
 {% block page %}
-    <!-- *** Files page markup (was #filesView) *** -->
+<style>
+  .cute-card {
+    background-color: white;
+    border-radius: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    padding: 1.25rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s ease;
+    min-height: 100%;
+  }
+
+  .cute-card:hover {
+    transform: scale(1.01);
+  }
+
+  .cute-card img {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: 250px; /* ⬆️ increased height */
+    object-fit: cover;
+    border-radius: 0.75rem;
+  }
+   @media (min-width: 768px) {
+    #uploadModal {
+      align-items: center !important;
+      margin-top: 0 !important;
+
+    }
+  }
+</style>
     <div class="flex justify-between items-center mb-6 md:mb-8 flex-wrap">
-        <h2 class="text-xl md:text-2xl font-bold text-pink-500 mb-2 md:mb-0">My Files</h2>
+    <h2 class="text-xl md:text-2xl font-bold text-pink-500 mb-2 md:mb-0">My Files</h2>
+    <div class="flex items-center gap-4">
         <button id="addFileBtn" class="cute-button flex items-center">
-            <!-- plus icon -->
             Upload File
         </button>
     </div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2">
+  {% for file in files %}
+  <div class="cute-card">
+    <div class="absolute -top-3 -right-3 bg-pink-200 text-pink-600 text-xs font-bold px-2 py-1 z-50 rounded-full shadow-sm flex items-center gap-1">
+  {% if file.file_ext in ".jpg,.jpeg,.png,.gif" %}
+    <svg data-lucide="image" class="w-4 h-4 text-pink-600"></svg> Image
+  {% elif file.file_ext == ".pdf" %}
+    <svg data-lucide="file-text" class="w-4 h-4 text-red-500"></svg> PDF
+  {% elif file.file_ext in ".doc,.docx" %}
+    <svg data-lucide="file-signature" class="w-4 h-4 text-blue-500"></svg> Word
+  {% elif file.file_ext in ".xls,.xlsx" %}
+    <svg data-lucide="file-bar-chart" class="w-4 h-4 text-green-500"></svg> Excel
+  {% else %}
+    <svg data-lucide="file" class="w-4 h-4 text-gray-400"></svg> File
+  {% endif %}
+</div>
 
-    <div>
-        <div class="flex mb-4 space-x-2 overflow-x-auto pb-2">
-            <button id="fileListBtn"     class="tab-button active px-3 md:px-4 py-2 bg-blue-100 text-blue-500 rounded-lg text-sm font-medium whitespace-nowrap">List View</button>
-            <button id="fileCalendarBtn" class="tab-button px-3 md:px-4 py-2 bg-blue-100 text-blue-500 rounded-lg text-sm font-medium whitespace-nowrap">Calendar View</button>
+    <!-- 🖼️ Image section with fixed height -->
+    <div class="w-full h-[250px] bg-pink-50 rounded-lg overflow-hidden flex items-center justify-center">
+  {% if file.file_ext in ".jpg,.jpeg,.png,.gif" %}
+    <img src="{{ file.file.url }}"
+         alt="Preview"
+         class="w-full h-full object-cover rounded-lg cursor-pointer"
+         onclick="openImageModal('{{ file.file.url }}')">
+  {% elif file.file_ext == ".pdf" %}
+    <svg data-lucide="file-text" class="w-12 h-12 text-red-500"></svg>
+  {% elif file.file_ext in ".doc,.docx" %}
+    <svg data-lucide="file-signature" class="w-12 h-12 text-blue-500"></svg>
+  {% elif file.file_ext in ".xls,.xlsx" %}
+    <svg data-lucide="file-bar-chart" class="w-12 h-12 text-green-500"></svg>
+  {% else %}
+    <svg data-lucide="file" class="w-12 h-12 text-gray-400"></svg>
+  {% endif %}
+</div>
+
+    <!-- 📄 File Info -->
+    <div class="mt-4 flex flex-col justify-between gap-6">
+      <div>
+        <h3 class="text-lg font-bold text-pink-600 flex items-center gap-1">
+          <svg data-lucide="folder" class="w-5 h-5 text-pink-400"></svg> {{ file.title }}
+        </h3>
+        <p class="mt-2 text-gray-700 text-sm">{{ file.description|linebreaksbr }}</p>
+
+        <div class="min-h-[1.25rem] mt-2">
+          {% if file.date %}
+          <p class="text-xs text-gray-500 flex items-center gap-1">
+            <svg data-lucide="calendar" class="w-4 h-4 text-gray-400"></svg> {{ file.date }}
+          </p>
+          {% endif %}
         </div>
 
-        <!-- list -->
-        <div id="fileListView" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <!-- file cards dynamically inserted -->
-        </div>
+        <p class="mt-1 text-xs text-gray-400 flex items-center gap-1">
+          <svg data-lucide="clock" class="w-4 h-4 text-gray-300"></svg>
+          Uploaded: {{ file.uploaded_at|date:"M d, Y H:i" }}
+        </p>
+      </div>
 
-        <!-- calendar -->
-        <div id="fileCalendarView" class="hidden">
-            <div id="fileCalendar" class="h-[500px] md:h-[600px]"></div>
-        </div>
+      {% if file.file %}
+      <a href="{{ file.file.url }}" target="_blank" class="text-pink-500 font-semibold hover:underline mt-4 inline-block flex items-center gap-1">
+        <svg data-lucide="download" class="w-4 h-4"></svg> Download File
+      </a>
+      {% endif %}
     </div>
+  </div>
+  {% empty %}
+  <p class="text-gray-400 italic flex items-center gap-1">
+    <svg data-lucide="info" class="w-4 h-4 text-gray-300"></svg>
+    No files uploaded yet. Click “Upload File” to get started
+  </p>
+  {% endfor %}
+</div>
+
+  <div id="uploadModal"
+     class="fixed inset-0 z-50 hidden">
+  <div class="w-full h-full flex justify-center items-start pt-[145px]">
+    <div id="modalContent"
+         class="bg-white p-6 rounded-xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-lg transform scale-95 opacity-0 transition-all duration-300 relative">
+      <button id="closeModalBtn" class="absolute top-3 right-4 text-gray-500 hover:text-red-500 text-lg font-bold">&times;</button>
+      <h3 class="text-lg font-bold mb-4 text-pink-500">Upload File Info</h3>
+      <form id="uploadForm" class="space-y-4" enctype="multipart/form-data">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Title</label>
+                <input type="text" name="title" required class="cute-input w-full">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Description</label>
+                <textarea name="description" rows="3" class="cute-input w-full resize-none"></textarea>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Date (optional)</label>
+                <input type="date" name="date" class="cute-input w-full">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Choose File</label>
+                <input type="file" name="file" required class="cute-input w-full">
+            </div>
+            <div class="text-right">
+                <button type="submit" class="cute-button">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 {% endblock %}
 {% block scripts %}
-<script src="{% static 'js/files.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const modal = document.getElementById("uploadModal");
+    const modalContent = document.getElementById("modalContent");
+    const openBtn = document.getElementById("addFileBtn");
+    const closeBtn = document.getElementById("closeModalBtn");
+    const form = document.getElementById("uploadForm");
+    const saveBtn = form.querySelector("button[type='submit']");
+
+   function showModal() {
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+    modal.style.backgroundColor = "rgba(0, 0, 0, 0.3)"; // ✅ add background
+    // Disable scrolling
+        document.body.style.overflow = 'hidden';
+
+    setTimeout(() => {
+        modalContent.classList.remove("scale-95", "opacity-0");
+        modalContent.classList.add("scale-100", "opacity-100");
+    }, 10);
+}
+
+function closeModal() {
+    modalContent.classList.remove("scale-100", "opacity-100");
+    modalContent.classList.add("scale-95", "opacity-0");
+
+    setTimeout(() => {
+        modal.classList.remove("flex");
+        modal.classList.add("hidden");
+        modal.style.backgroundColor = "transparent"; // ✅ remove background
+        // Re-enable scrolling
+    document.body.style.overflow = '';
+        form.reset();
+    }, 200);
+}
+
+    openBtn.addEventListener("click", showModal);
+    closeBtn.addEventListener("click", closeModal);
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        saveBtn.disabled = true;
+        saveBtn.classList.add("loader"); // Optional: add loading class
+
+        try {
+            const formData = new FormData(form);
+            const resp = await fetch("{% url 'planner:upload_file' %}", {
+                method: "POST",
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+                body: formData
+            });
+
+            if (!resp.ok) throw new Error(await resp.text());
+
+            toast("Saved!");
+            form.reset();
+            closeModal();
+
+            if (typeof refreshCalendar === "function") {
+                await refreshCalendar();
+            } else {
+                window.location.reload();
+            }
+        } catch (err) {
+            toast("Error: " + err.message);
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.classList.remove("loader");
+        }
+    });
+
+    /* ───── cute toast helper ───── */
+    function toast(msg) {
+        const t = document.createElement("div");
+        t.className = `
+  toast
+  fixed
+  bottom-6
+  left-1/2
+  transform
+  -translate-x-1/2
+  bg-pink-500
+  text-white
+  font-semibold
+  px-4
+  py-2
+  rounded-xl
+  shadow-lg
+  z-50
+  animate-fade-in-up
+`.replace(/\s+/g, ' ');
+        t.innerHTML = `✅ <span class="ml-1">${msg}</span>`;
+        t.textContent = msg;
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 3000);
+    }
+
+if (window.lucide) lucide.createIcons();
+});
+</script>
+
 {% endblock %}

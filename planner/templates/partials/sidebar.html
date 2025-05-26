@@ -11,30 +11,29 @@
             <a href="{% url 'planner:dashboard' %}"
                class="nav-item w-full text-left px-4 py-3 text-gray-700 font-medium flex items-center
                       {% if active == 'dashboard' %}active{% endif %}">
-                🏡 Dashboard
+                <svg data-lucide="home" class="w-5 h-5 mr-2"></svg> Dashboard
             </a>
         </li>
         <li class="mb-2">
             <a href="{% url 'planner:calendar' %}"
                class="nav-item w-full text-left px-4 py-3 text-gray-700 font-medium flex items-center
                       {% if active == 'calendar' %}active{% endif %}">
-                🗓️ Calendar
+                <svg data-lucide="calendar" class="w-5 h-5 mr-2"></svg> Calendar
             </a>
         </li>
         <li class="mb-2">
             <a href="{% url 'planner:files' %}"
                class="nav-item w-full text-left px-4 py-3 text-gray-700 font-medium flex items-center
                       {% if active == 'files' %}active{% endif %}">
-                🌷 Files
+                <svg data-lucide="folder" class="w-5 h-5 mr-2"></svg> Files
+            </a>
+        </li>
+        <li class="mb-2">
+            <a href="{% url 'planner:settings' %}"
+               class="nav-item w-full text-left px-4 py-3 text-gray-700 font-medium flex items-center
+                      {% if active == 'settings' %}active{% endif %}">
+                <svg data-lucide="settings" class="w-5 h-5 mr-2"></svg> Settings
             </a>
         </li>
     </ul>
 </nav>
-
-<div class="mt-auto">
-   <a href=""
-       class="mobile-menu-item">
-        <span class="icon">⚙️</span>
-        <span class="label">Settings</span>
-    </a>
-</div>

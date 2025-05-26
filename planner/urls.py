@@ -17,12 +17,24 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from . import views
+from django.conf import settings
+from django.conf.urls.static import static
 
 app_name = 'planner'
 
 urlpatterns = [
     path('', views.dashboard_view, name='dashboard'),
     path('calendar/', views.calendar_view,  name='calendar'),
-    path('files/',    views.files_view,     name='files'),
     path("calendar/create/", views.create_event, name="event-create"),
+    path('files/', views.files_page, name='files'),
+    path('files/upload/', views.upload_file, name='upload_file'),
+    path('settings/', views.settings_page, name='settings'),
+    path('settings/change-password/', views.change_password, name='change_password'),
+    path('clients/add/', views.add_client, name='add_client'),
+    path('clients/<int:client_id>/', views.get_client, name='get_client'),
+    path('clients/<int:client_id>/edit/', views.edit_client, name='edit_client'),
+    path('clients/<int:client_id>/toggle-active/', views.toggle_client_active, name='toggle_client_active'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
