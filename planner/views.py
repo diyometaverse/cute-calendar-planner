@@ -1,15 +1,17 @@
 import os
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 import json, datetime as dt
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
 from planner.forms import ClientForm, FileUploadForm
-from .models import Client, Event, File
+from .models import Client, Event, File, UserProfile
 from django.contrib import messages
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils import timezone
+from planner.utils.google_drive import upload_to_google_drive
+import mimetypes
 # Create your views here.
 
 def index(request):
@@ -82,8 +84,13 @@ def login_page(request):
     return render(request, "login.html")
 
 def logout_user(request):
+    request.session.flush()  
     logout(request)
-    messages.success(request, "Thank you for using! ❤️")
+    storage = messages.get_messages(request)
+    for _ in storage:
+        pass
+
+    messages.success(request, "Thank you! ❤️")
     return redirect("login")
 
 def dashboard(request):
@@ -109,28 +116,84 @@ def upload_file(request):
     if request.method == 'POST':
         form = FileUploadForm(request.POST, request.FILES)
         if form.is_valid():
+            uploaded_file = request.FILES['file']
+            filename = uploaded_file.name
+            mimetype, _ = mimetypes.guess_type(filename)
+
+            google_drive_link = upload_to_google_drive(uploaded_file, filename, mimetype, request.user.username)
+
             file_instance = form.save(commit=False)
             file_instance.user = request.user
+            file_instance.file = uploaded_file 
+            file_instance.external_url = google_drive_link 
             file_instance.save()
+
+            return JsonResponse({'success': True, 'gdrive_url': google_drive_link})
+        return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+    return JsonResponse({'success': False, 'message': 'Invalid request'}, status=405)
+
+@login_required
+def get_file(request, file_id):
+    file = get_object_or_404(File, id=file_id, user=request.user)
+    return JsonResponse({
+        'id': file.id,
+        'title': file.title,
+        'description': file.description,
+        'date': file.date.isoformat() if file.date else None,
+    })
+
+@login_required
+def edit_file(request, file_id):
+    file = get_object_or_404(File, id=file_id, user=request.user)
+    
+    if request.method == 'POST':
+        form = FileUploadForm(request.POST, instance=file)
+        if form.is_valid():
+            form.save()
             return JsonResponse({'success': True})
-        else:
-            return JsonResponse({'success': False, 'errors': form.errors}, status=400)
-        
+        return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+    return JsonResponse({'success': False, 'message': 'Invalid request'}, status=405)
+
+@login_required
+def delete_file(request, file_id):
+    if request.method == 'POST':
+        file = get_object_or_404(File, id=file_id, user=request.user)
+        file.delete()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False, 'message': 'Invalid request'}, status=405)
+
 @login_required
 def settings_page(request):
     user = request.user
-
+    clients = user.clients.all()
+    profile = getattr(user, 'profile', None)
     if request.method == 'POST':
         user.first_name = request.POST.get('first_name', '')
         user.last_name = request.POST.get('last_name', '')
         user.email = request.POST.get('email', '')
+        
         if 'profile_image' in request.FILES:
-            user.profile_image = request.FILES['profile_image']
+            if hasattr(user, 'profile'):
+                user.profile.profile_image = request.FILES['profile_image']
+                user.profile.save()
+            else:
+                UserProfile.objects.create(
+                    user=user,
+                    profile_image=request.FILES['profile_image']
+                )
+        
         user.save()
         messages.success(request, "Profile updated successfully 💖")
+          # adjust to your model
+        return JsonResponse({'success': True})
 
-    clients = user.clients.all()  # adjust to your model
-    return render(request, 'settings.html', {'user': user, 'clients': clients, 'active': "settings"})
+    return render(request, 'settings.html', {
+        'user': user,
+        'active': "settings",
+        'profile': profile,
+        'clients': clients
+        
+    })
 
 @login_required
 def add_client(request):
@@ -246,3 +309,41 @@ def change_password(request):
             'success': False, 
             'message': 'Failed to update password'
         }, status=500)
+
+@login_required
+def edit_event(request, event_id):
+    event = get_object_or_404(Event, id=event_id, user=request.user)
+    
+    if request.method == 'POST':
+        try:
+            event.title = request.POST.get('title')
+            event.desc = request.POST.get('desc', '')
+            event.start = request.POST.get('start')
+            event.end = request.POST.get('end') or None
+            event.client = request.POST.get('client', '')
+            event.priority = request.POST.get('priority')
+            event.save()
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    return JsonResponse({'success': False, 'message': 'Invalid request'}, status=405)
+
+@login_required
+def delete_event(request, event_id):
+    if request.method == 'POST':
+        event = get_object_or_404(Event, id=event_id, user=request.user)
+        event.delete()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False, 'message': 'Invalid request'}, status=405)
+
+@login_required
+def calendar_list_view(request):
+    today = timezone.now().date()
+    
+    events = Event.objects.filter(user=request.user, start__gte=today).order_by('start')
+    clients = Client.objects.filter(user=request.user, is_active=True)
+    return render(request, 'calendar_list.html', {
+        'events': events,
+        'clients': clients,
+        'active': 'calendar'
+    })

@@ -1,26 +1,58 @@
-{# same “active” var #}
+{# same "active" var #}
+<style>
+    .mobile-menu {
+        @apply fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-2 flex justify-around items-center;
+    }
+    .mobile-menu-item {
+        @apply flex flex-col items-center gap-1 py-2 px-4 rounded-lg transition-all duration-300;
+    }
+    .mobile-menu-item .icon {
+        @apply relative flex items-center justify-center;
+    }
+    .mobile-menu-item .label {
+        @apply text-xs font-medium transition-colors;
+    }
+    .mobile-menu-item:hover .icon svg,
+    .mobile-menu-item.active .icon svg {
+        @apply transform scale-110;
+    }
+    .mobile-menu-item.active .label {
+        @apply font-semibold;
+    }
+    /* Color specific styles */
+    .mobile-menu-item[href*="dashboard"] .label { @apply text-pink-400; }
+    .mobile-menu-item[href*="calendar"] .label { @apply text-purple-400; }
+    .mobile-menu-item[href*="files"] .label { @apply text-yellow-400; }
+    .mobile-menu-item[href*="settings"] .label { @apply text-sky-400; }
+    
+    .mobile-menu-item.active[href*="dashboard"] { @apply bg-pink-50; }
+    .mobile-menu-item.active[href*="calendar"] { @apply bg-purple-50; }
+    .mobile-menu-item.active[href*="files"] { @apply bg-yellow-50; }
+    .mobile-menu-item.active[href*="settings"] { @apply bg-sky-50; }
+</style>
+
 <div class="mobile-menu">
     <a href="{% url 'planner:dashboard' %}"
        class="mobile-menu-item {% if active == 'dashboard' %}active{% endif %}">
-        <span class="icon"><svg data-lucide="home" class="w-6 h-6"></svg></span>
+        <span class="icon"><svg data-lucide="home" class="w-6 h-6 text-pink-400"></svg></span>
         <span class="label">Dashboard</span>
     </a>
 
     <a href="{% url 'planner:calendar' %}"
        class="mobile-menu-item {% if active == 'calendar' %}active{% endif %}">
-        <span class="icon"><svg data-lucide="calendar" class="w-6 h-6"></svg></span>
+        <span class="icon"><svg data-lucide="calendar" class="w-6 h-6 text-purple-400"></svg></span>
         <span class="label">Calendar</span>
     </a>
 
     <a href="{% url 'planner:files' %}"
        class="mobile-menu-item {% if active == 'files' %}active{% endif %}">
-        <span class="icon"><svg data-lucide="folder" class="w-6 h-6"></svg></span>
+        <span class="icon"><svg data-lucide="folder" class="w-6 h-6 text-yellow-400"></svg></span>
         <span class="label">Files</span>
     </a>
 
     <a href="{% url 'planner:settings' %}"
        class="mobile-menu-item {% if active == 'settings' %}active{% endif %}">
-        <span class="icon"><svg data-lucide="settings" class="w-6 h-6"></svg></span>
+        <span class="icon"><svg data-lucide="settings" class="w-6 h-6 text-sky-400"></svg></span>
         <span class="label">Settings</span>
     </a>
 </div>

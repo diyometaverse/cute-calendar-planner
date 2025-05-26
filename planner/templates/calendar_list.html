@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Calendar List – Cute Planner{% endblock %}
+
+{% block page %}
+<!-- Header & button -->
+<div class="flex justify-between items-center mb-6 md:mb-8 flex-wrap">
+    <div class="flex items-center gap-4">
+        <h2 class="text-xl md:text-2xl font-bold text-pink-500">Calendar</h2>
+        <a href="{% url 'planner:calendar' %}" class="cute-button flex items-center gap-1">
+            <svg data-lucide="calendar" class="w-4 h-4"></svg>
+            <span>Calendar View</span>
+        </a>
+    </div>
+</div>
+
+<!-- List View -->
+<div class="space-y-4">
+    {% regroup events by start|date:"F Y" as event_list %}
+    {% for month in event_list %}
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div class="bg-purple-50 px-6 py-3 border-b border-purple-100">
+            <h3 class="font-semibold text-purple-600">{{ month.grouper }}</h3>
+        </div>
+        <div class="divide-y divide-gray-100">
+            {% for event in month.list %}
+            <div class="p-4 hover:bg-gray-50 transition-colors group relative">
+                <div class="flex items-start justify-between gap-4">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-1">
+                            <h4 class="font-medium">{{ event.title }}</h4>
+                            {% if event.priority == 'urgent' %}
+                            <span class="px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-600">Urgent</span>
+                            {% elif event.priority == 'mid' %}
+                            <span class="px-2 py-0.5 text-xs rounded-full bg-yellow-100 text-yellow-600">Medium</span>
+                            {% else %}
+                            <span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-600">Low</span>
+                            {% endif %}
+                        </div>
+                        {% if event.desc %}
+                        <p class="text-sm text-gray-600 mb-2">{{ event.desc }}</p>
+                        {% endif %}
+                        <div class="flex flex-wrap gap-4 text-sm text-gray-500">
+                            <div class="flex items-center gap-1">
+                                <svg data-lucide="calendar" class="w-4 h-4"></svg>
+                                {{ event.start|date:"M d, Y" }}
+                                {% if event.end %}
+                                - {{ event.end|date:"M d, Y" }}
+                                {% endif %}
+                            </div>
+                            {% if event.client %}
+                            <div class="flex items-center gap-1">
+                                <svg data-lucide="user" class="w-4 h-4"></svg>
+                                {{ event.client }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                        <button onclick="editEvent({{ event.id }}, '{{ event.title|escapejs }}', '{{ event.desc|escapejs }}', '{{ event.start|date:'Y-m-d' }}', '{{ event.end|date:'Y-m-d' }}', '{{ event.client|escapejs }}', '{{ event.priority }}')" 
+                                class="p-1.5 bg-purple-50 hover:bg-purple-100 text-purple-600 rounded-lg transition-colors">
+                            <svg data-lucide="edit-2" class="w-4 h-4"></svg>
+                        </button>
+                        <button onclick="deleteEvent({{ event.id }})"
+                                class="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors">
+                            <svg data-lucide="trash-2" class="w-4 h-4"></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="text-center py-12 text-gray-500">
+        <svg data-lucide="calendar" class="w-12 h-12 mx-auto mb-4 text-gray-400"></svg>
+        <p>No events scheduled yet</p>
+        <button onclick="goToCalendarAndOpenModal()" class="mt-4 text-purple-500 hover:underline">Add your first event</button>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Edit Event Modal -->
+<div id="editEventModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+    <div class="w-full h-full flex justify-center items-start pt-[35px]">
+        <div class="bg-white p-6 rounded-xl w-full max-w-md shadow-lg relative">
+            <button onclick="closeEditModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <svg data-lucide="x" class="w-5 h-5"></svg>
+            </button>
+            <h3 class="text-lg font-bold text-purple-500 mb-4">Edit Event</h3>
+            
+            <form id="editEventForm" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="event_id" id="edit_event_id">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Title</label>
+                    <input type="text" name="title" id="edit_title" required class="cute-input w-full">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea name="description" id="edit_description" rows="3" class="cute-input w-full resize-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Start Date</label>
+                    <input type="date" name="start" id="edit_start" required class="cute-input w-full">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">End Date (Optional)</label>
+                    <input type="date" name="end" id="edit_end" class="cute-input w-full">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Client</label>
+                    <select name="client" id="edit_client" class="cute-input w-full">
+                        <option value="" disabled selected>Select Client (Optional)</option>
+                        {% for client in clients %}
+                            <option value="{{ client.name }}">{{ client.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Priority</label>
+                    <select name="priority" id="edit_priority" class="cute-input w-full">
+                        <option value="urgent">Urgent</option>
+                        <option value="mid">Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-2 pt-4">
+                    <button type="button" onclick="closeEditModal()" 
+                            class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+                    <button type="submit" class="cute-button">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const editModal = document.getElementById('editEventModal');
+    const editForm = document.getElementById('editEventForm');
+
+    window.editEvent = function(id, title, desc, start, end, client, priority) {
+        document.getElementById('edit_event_id').value = id;
+        document.getElementById('edit_title').value = title;
+        document.getElementById('edit_description').value = desc;
+        document.getElementById('edit_start').value = start;
+        document.getElementById('edit_end').value = end;
+        document.getElementById('edit_client').value = client;
+        document.getElementById('edit_priority').value = priority;
+        
+        editModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    window.closeEditModal = function() {
+        editModal.classList.add('hidden');
+        document.body.style.overflow = '';
+        editForm.reset();
+    }
+
+    window.deleteEvent = function(eventId) {
+        confirmToast("Are you sure you want to delete this event?", async () => {
+            try {
+                const response = await fetch(`/calendar/${eventId}/delete/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Failed to delete event');
+                
+                toast('Event deleted successfully!');
+                location.reload();
+            } catch (error) {
+                toast('Error deleting event', 'error');
+            }
+        });
+    }
+
+    editForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const eventId = document.getElementById('edit_event_id').value;
+        const formData = new FormData(this);
+        
+        try {
+            const response = await fetch(`/calendar/${eventId}/edit/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+                body: formData
+            });
+
+            if (!response.ok) throw new Error('Failed to update event');
+            
+            toast('Event updated successfully!');
+            closeEditModal();
+            location.reload();
+        } catch (error) {
+            toast('Error updating event', 'error');
+        }
+    });
+
+    // Close modal on backdrop click
+    editModal.addEventListener('click', function(e) {
+        if (e.target === editModal) {
+            closeEditModal();
+        }
+    });
+
+    // Check if we need to open the modal on page load
+    if (sessionStorage.getItem('openEventModal') === 'true') {
+        sessionStorage.removeItem('openEventModal');
+        openEventModal();
+    }
+});
+
+function toast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `fixed bottom-6 left-1/2 transform -translate-x-1/2 ${type === 'error' ? 'bg-red-500' : 'bg-purple-500'} text-white px-4 py-2 rounded-xl shadow-lg z-50`;
+    toast.innerHTML = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
+function confirmToast(message, onConfirm) {
+    const toast = document.createElement('div');
+    toast.className = 'fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-white text-gray-700 px-6 py-3 rounded-xl shadow-lg z-50 flex items-center gap-4';
+    toast.innerHTML = `
+        <div class="flex items-center gap-2">
+            <svg data-lucide="alert-triangle" class="w-5 h-5 text-purple-500"></svg>
+            <span>${message}</span>
+        </div>
+        <div class="flex gap-2">
+            <button class="px-3 py-1 text-sm bg-purple-500 text-white rounded-lg hover:bg-purple-600">Yes</button>
+            <button class="px-3 py-1 text-sm bg-gray-100 rounded-lg hover:bg-gray-200">No</button>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    if (window.lucide) lucide.createIcons();
+    
+    const [confirmBtn, cancelBtn] = toast.querySelectorAll('button');
+    confirmBtn.onclick = () => {
+        onConfirm();
+        toast.remove();
+    };
+    cancelBtn.onclick = () => toast.remove();
+    
+    setTimeout(() => toast.remove(), 5000);
+}
+
+function goToCalendarAndOpenModal() {
+    // Store a flag in sessionStorage
+    sessionStorage.setItem('openEventModal', 'true');
+    // Redirect to calendar page
+    window.location.href = "{% url 'planner:calendar' %}";
+}
+</script>
+{% endblock %}

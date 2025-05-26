@@ -9,6 +9,23 @@
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    
+<style>
+.fixed {
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translate(-50%, 100%);
+        opacity: 0;
+    }
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+}
+</style>
 </head>
 <body>
 <!-- Decorative elements -->
@@ -49,12 +66,37 @@
       </form>
 
       <div class="text-center mt-6">
-        <p class="text-pink-400">
-          Don't have an account?
-          <a href="#" class="text-pink-500 font-medium">Sign up</a>
-        </p>
+       <p class="text-pink-400">
+      Don't have an account?
+      <a href="#" id="signup-link" class="text-pink-500 font-medium">Sign up</a>
+    </p>
       </div>
     </div>
   </div>
+
+  <script>
+function showToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'fixed w-[90%] md:w-auto bottom-6 left-1/2 transform -translate-x-1/2 bg-pink-500 text-white px-6 py-3 rounded-xl shadow-lg z-50 flex items-center gap-2';
+    toast.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+        </svg>
+        <span class="text-sm md:text-base">${message}</span>
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Keep existing click handler
+document.getElementById('signup-link').addEventListener('click', function(e) {
+    e.preventDefault();
+    showToast('Please contact Dheo Jasper to open an account 💖');
+});
+</script>
 </body>
 </html>

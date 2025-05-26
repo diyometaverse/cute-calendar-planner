@@ -57,16 +57,16 @@
         
         <!-- View Mode -->
         <div id="profile-view" class="flex flex-col md:flex-row gap-6">
-            <!-- Profile Image -->
-            <div class="flex flex-col items-center">
-                <div class="w-32 h-32 rounded-full bg-pink-50 border-4 border-pink-100 overflow-hidden">
-                    {% if user.profile_image %}
-                        <img src="{{ user.profile_image.url }}" alt="Profile" class="w-full h-full object-cover">
-                    {% else %}
-                        <svg data-lucide="user" class="w-full h-full p-6 text-pink-300"></svg>
-                    {% endif %}
-                </div>
-            </div>
+    <!-- Profile Image -->
+    <div class="flex flex-col items-center">
+        <div class="w-32 h-32 rounded-full bg-pink-50 border-4 border-pink-100 overflow-hidden">
+            {% if profile and profile.profile_image %}
+                <img src="{{ profile.profile_image.url }}" alt="Profile" class="w-full h-full object-cover">
+            {% else %}
+                <svg data-lucide="user" class="w-full h-full p-6 text-pink-300"></svg>
+            {% endif %}
+        </div>
+    </div>
 
             <!-- User Info -->
             <div class="flex-1 space-y-4">
@@ -98,8 +98,8 @@
                 <!-- Profile Image Edit -->
                 <div class="flex flex-col items-center">
                     <div class="w-32 h-32 rounded-full bg-pink-50 border-4 border-pink-100 overflow-hidden mb-2">
-                        {% if user.profile_image %}
-                            <img src="{{ user.profile_image.url }}" alt="Profile" class="w-full h-full object-cover">
+                        {% if profile and profile.profile_image %}
+                            <img src="{{ profile.profile_image.url }}" alt="Profile" class="w-full h-full object-cover">
                         {% else %}
                             <svg data-lucide="user" class="w-full h-full p-6 text-pink-300"></svg>
                         {% endif %}
@@ -195,7 +195,7 @@
             <div class="p-4 rounded-lg {% if client.is_active %}bg-pink-50{% else %}bg-gray-50{% endif %} 
             border {% if client.is_active %}border-pink-100{% else %}border-gray-200{% endif %} relative group">
                 <!-- Edit/Active toggle buttons -->
-                <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div class="absolute bottom-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button onclick="editClient({{ client.id }})" 
                             class="p-1 text-gray-400 hover:text-pink-500">
                         <svg data-lucide="edit" class="w-4 h-4"></svg>
@@ -248,7 +248,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Phone</label>
-                    <input type="tel" name="phone" class="cute-input w-full mt-1">
+                    <input type="number" name="phone" class="cute-input w-full mt-1">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Address</label>
@@ -296,7 +296,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Phone</label>
-                    <input type="tel" name="phone" id="edit_phone" class="cute-input w-full mt-1">
+                    <input type="number" name="phone" id="edit_phone" class="cute-input w-full mt-1">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Address</label>
@@ -327,6 +327,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const editClientModal = document.getElementById('editClientModal');
     const editClientForm = document.getElementById('editClientForm');
     const passwordForm = document.getElementById('password-edit');
+    const profileForm = document.getElementById('profile-edit');
+    const profileInput = document.getElementById('profileImage');
 
     // Add these functions
     window.openClientModal = function() {
@@ -554,6 +556,54 @@ document.addEventListener('DOMContentLoaded', function() {
     editClientModal.addEventListener('click', function(e) {
         if (e.target === editClientModal) {
             closeEditModal();
+        }
+    });
+
+    // Add this to your DOMContentLoaded event listener
+    profileInput.addEventListener('change', function(e) {
+        if (e.target.files && e.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = profileInput.parentElement.querySelector('img') || 
+                           document.createElement('img');
+                img.src = e.target.result;
+                img.className = 'w-full h-full object-cover';
+                if (!profileInput.parentElement.querySelector('img')) {
+                    profileInput.parentElement.querySelector('svg')?.remove();
+                    profileInput.parentElement.querySelector('.rounded-full').appendChild(img);
+                }
+            }
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    });
+
+    profileForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        try {
+            const response = await fetch(window.location.href, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showToast('Profile updated successfully!', 'check');
+                toggleEdit('profile');
+                // Optionally reload to show new image
+                location.reload();
+            } else {
+                showToast('Failed to update profile', 'alert-circle');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Something went wrong', 'x-circle');
         }
     });
 

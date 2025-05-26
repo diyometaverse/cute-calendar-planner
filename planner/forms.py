@@ -1,11 +1,15 @@
 from django import forms
-from .models import File, Client
+from .models import Client, File
 
 class FileUploadForm(forms.ModelForm):
     class Meta:
         model = File
         fields = ['title', 'description', 'date', 'file']
-        
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 3}),
+            'date': forms.DateInput(attrs={'type': 'date'}),
+        }
+
 class ClientForm(forms.ModelForm):
     class Meta:
         model = Client
