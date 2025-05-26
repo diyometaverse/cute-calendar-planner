@@ -65,12 +65,12 @@
     </a>
 
   {% elif file.file_ext in ".doc,.docx" %}
-    <a href="https://docs.google.com/viewer?url={{ file.external_url }}" target="_blank">
+    <a href="{{ file.external_url }}" target="_blank">
       <svg data-lucide="file-signature" class="w-12 h-12 text-blue-500"></svg>
     </a>
 
   {% elif file.file_ext in ".xls,.xlsx" %}
-    <a href="https://docs.google.com/viewer?url={{ file.external_url }}" target="_blank">
+    <a href="{{ file.external_url }}" target="_blank">
       <svg data-lucide="file-bar-chart" class="w-12 h-12 text-green-500"></svg>
     </a>
 
