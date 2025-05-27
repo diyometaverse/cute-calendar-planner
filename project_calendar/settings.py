@@ -29,7 +29,7 @@ SECRET_KEY = 'django-insecure-tdr(z3ky-wv8!5o7_85%z=wbx!u&rwzaucev9#shxft@s2lyf+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['web-production-02603.up.railway.app', 'localhost', '127.0.0.1']
 
 
 
@@ -171,3 +171,4 @@ SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
 SOCIAL_AUTH_ASSOCIATE_BY_EMAIL = False
 SOCIAL_AUTH_GOOGLE_OAUTH2_AUTO_CREATE_USERS = False
 SOCIAL_AUTH_LOGIN_ERROR_URL = '/login-error/'
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
