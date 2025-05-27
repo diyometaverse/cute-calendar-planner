@@ -120,6 +120,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👥 Contact
 
-Your Name - [@diyometaverse](https://github.com/diyometaverse)
+[@diyometaverse](https://github.com/diyometaverse)
 
 Project Link: [https://github.com/diyometaverse/cute-calendar-planner](https://github.com/diyometaverse/cute-calendar-planner)
