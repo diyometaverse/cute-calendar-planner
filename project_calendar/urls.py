@@ -23,4 +23,5 @@ urlpatterns = [
     path("login/",  planner_views.login_page,  name="login"),
     path("logout/", planner_views.logout_user, name="logout"),
     path('', include('planner.urls', namespace='planner')),
+    path('auth/', include('social_django.urls', namespace='social')),
 ]
