@@ -27,9 +27,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-tdr(z3ky-wv8!5o7_85%z=wbx!u&rwzaucev9#shxft@s2lyf+'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['.railway.app', 'localhost', '127.0.0.1']
+
 
 
 # Application definition
@@ -43,9 +44,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'planner',
 ]
-
-STATIC_URL = 'static/'
-STATICFILES_DIRS = [ BASE_DIR / 'planner' / 'static' ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -95,6 +93,11 @@ DATABASES = {
 SUPABASE_URL = env('SUPABASE_URL')
 SUPABASE_KEY = env('SUPABASE_KEY')
 SUPABASE_BUCKET = env('SUPABASE_BUCKET')
+
+STATIC_URL = f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_BUCKET}/static/"
+STATICFILES_DIRS = []
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

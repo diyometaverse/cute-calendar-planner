@@ -2,3 +2,4 @@ __pycache__/
 project_calendar/.env
 *uploads/
 *.sqlite3
+*staticfiles/
