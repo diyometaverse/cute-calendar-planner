@@ -405,3 +405,6 @@ def calendar_list_view(request):
         'clients': clients,
         'active': 'calendar'
     })
+    
+def login_error(request):
+    return render(request, 'login_error.html')
