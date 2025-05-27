@@ -1,3 +1,4 @@
+import io
 import os
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
@@ -6,10 +7,13 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
 from planner.forms import ClientForm, FileUploadForm
+from planner.utils.supabase import delete_file_from_supabase, get_supabase_public_url, upload_file_to_supabase
 from .models import Client, Event, File, UserProfile
 from django.contrib import messages
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils import timezone
+from django.contrib.auth.models import User
+from django.views.decorators.csrf import csrf_exempt
 from planner.utils.google_drive import upload_to_google_drive
 import mimetypes
 # Create your views here.
@@ -76,12 +80,17 @@ def login_page(request):
         username = request.POST.get("username", "").strip()
         password = request.POST.get("password", "")
         user = authenticate(request, username=username, password=password)
+
         if user:
             login(request, user)
+            if user.is_superuser:
+                return redirect('/admin/')
             return redirect("planner:dashboard")
+
         messages.error(request, "Invalid credentials")
 
     return render(request, "login.html")
+
 
 def logout_user(request):
     request.session.flush()  
@@ -118,73 +127,123 @@ def upload_file(request):
         if form.is_valid():
             uploaded_file = request.FILES['file']
             filename = uploaded_file.name
-            mimetype, _ = mimetypes.guess_type(filename)
+            file_ext = os.path.splitext(filename)[1].lower()
+            username = request.user.username
 
-            google_drive_link = upload_to_google_drive(uploaded_file, filename, mimetype, request.user.username)
+            office_exts = ['.doc', '.docx', '.xls', '.xlsx']
+
+            if file_ext in office_exts:
+                try:
+                    drive_url = upload_to_google_drive(
+                        io.BytesIO(uploaded_file.read()),
+                        filename,
+                        uploaded_file.content_type,
+                        username
+                    )
+                except Exception as e:
+                    return JsonResponse({'success': False, 'error': f'Google Drive Error: {str(e)}'}, status=500)
+
+                external_url = drive_url
+
+            else:
+                upload_result = upload_file_to_supabase(uploaded_file, path=username)
+                if "error" in upload_result:
+                    return JsonResponse({'success': False, 'error': upload_result["error"]}, status=500)
+
+                external_url = upload_result["public_url"]
 
             file_instance = form.save(commit=False)
             file_instance.user = request.user
-            file_instance.file = uploaded_file 
-            file_instance.external_url = google_drive_link 
+            file_instance.file = uploaded_file
+            file_instance.external_url = external_url
             file_instance.save()
 
-            return JsonResponse({'success': True, 'gdrive_url': google_drive_link})
+            return JsonResponse({'success': True, 'url': external_url})
+
         return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+
     return JsonResponse({'success': False, 'message': 'Invalid request'}, status=405)
 
 @login_required
 def get_file(request, file_id):
     file = get_object_or_404(File, id=file_id, user=request.user)
+
     return JsonResponse({
         'id': file.id,
         'title': file.title,
         'description': file.description,
         'date': file.date.isoformat() if file.date else None,
+        'external_url': file.external_url
     })
 
 @login_required
 def edit_file(request, file_id):
     file = get_object_or_404(File, id=file_id, user=request.user)
-    
+
     if request.method == 'POST':
-        form = FileUploadForm(request.POST, instance=file)
+        form = FileUploadForm(request.POST, request.FILES, instance=file)
         if form.is_valid():
+            if 'file' in request.FILES:
+                if file.external_url:
+                    delete_file_from_supabase(file.external_url)
+
+                uploaded_file = request.FILES['file']
+                upload_result = upload_file_to_supabase(uploaded_file, path=request.user.username)
+                if "error" in upload_result:
+                    return JsonResponse({'success': False, 'error': upload_result["error"]}, status=500)
+
+                file.external_url = upload_result["public_url"]
+
             form.save()
             return JsonResponse({'success': True})
         return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+
     return JsonResponse({'success': False, 'message': 'Invalid request'}, status=405)
 
 @login_required
 def delete_file(request, file_id):
     if request.method == 'POST':
         file = get_object_or_404(File, id=file_id, user=request.user)
+
+        if file.external_url:
+            delete_file_from_supabase(file.external_url)
+
         file.delete()
         return JsonResponse({'success': True})
+
     return JsonResponse({'success': False, 'message': 'Invalid request'}, status=405)
 
 @login_required
 def settings_page(request):
     user = request.user
     clients = user.clients.all()
-    profile = getattr(user, 'profile', None)
+    profile = UserProfile.objects.filter(user=user).first()
+
     if request.method == 'POST':
         user.first_name = request.POST.get('first_name', '')
         user.last_name = request.POST.get('last_name', '')
         user.email = request.POST.get('email', '')
-        
-        if 'profile_image' in request.FILES:
-            if hasattr(user, 'profile'):
-                user.profile.profile_image = request.FILES['profile_image']
-                user.profile.save()
-            else:
-                UserProfile.objects.create(
-                    user=user,
-                    profile_image=request.FILES['profile_image']
-                )
-        
         user.save()
+
+        if 'profile_image' in request.FILES:
+            uploaded_image = request.FILES['profile_image']
+            upload_result = upload_file_to_supabase(uploaded_image, f"profile_images/{user.username}")
+
+            if upload_result and not upload_result.get("error"):
+                public_url = upload_result["public_url"]  # ✅ Just use the public_url directly
+
+                if profile:
+                    profile.profile_image_url = public_url
+                    profile.save()
+                else:
+                    UserProfile.objects.create(
+                        user=user,
+                        profile_image_url=public_url
+                    )
+            else:
+                return JsonResponse({'success': False, 'message': upload_result.get("error")}, status=400)
+
         messages.success(request, "Profile updated successfully 💖")
-          # adjust to your model
         return JsonResponse({'success': True})
 
     return render(request, 'settings.html', {
@@ -192,7 +251,6 @@ def settings_page(request):
         'active': "settings",
         'profile': profile,
         'clients': clients
-        
     })
 
 @login_required

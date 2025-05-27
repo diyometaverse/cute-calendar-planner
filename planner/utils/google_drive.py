@@ -15,7 +15,6 @@ SERVICE_ACCOUNT_INFO = json.loads(base64.b64decode(encoded_creds))
 
 # 🔥 THIS IS THE FIX
 SERVICE_ACCOUNT_INFO['private_key'] = SERVICE_ACCOUNT_INFO['private_key'].replace("\\n", "\n")
-print("PRIVATE KEY START:\n", repr(SERVICE_ACCOUNT_INFO['private_key'])[:80])
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 PARENT_FOLDER_ID = env('GOOGLE_DRIVE_FOLDER_ID')
 

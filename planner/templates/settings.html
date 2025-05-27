@@ -60,8 +60,8 @@
     <!-- Profile Image -->
     <div class="flex flex-col items-center">
         <div class="w-32 h-32 rounded-full bg-pink-50 border-4 border-pink-100 overflow-hidden">
-            {% if profile and profile.profile_image %}
-                <img src="{{ profile.profile_image.url }}" alt="Profile" class="w-full h-full object-cover">
+            {% if profile.profile_image_url %}
+                <img src="{{ profile.profile_image_url }}" alt="Profile" class="w-full h-full object-cover">
             {% else %}
                 <svg data-lucide="user" class="w-full h-full p-6 text-pink-300"></svg>
             {% endif %}

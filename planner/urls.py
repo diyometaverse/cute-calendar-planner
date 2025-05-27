@@ -40,6 +40,7 @@ urlpatterns = [
     path('clients/<int:client_id>/edit/', views.edit_client, name='edit_client'),
     path('clients/<int:client_id>/toggle-active/', views.toggle_client_active, name='toggle_client_active'),
     path('calendar/list/', views.calendar_list_view, name='calendar_list'),
+
 ]
 
 if settings.DEBUG:

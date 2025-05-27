@@ -72,7 +72,7 @@ class UniqueFilePath:
 class File(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
-    file = models.FileField(upload_to='uploads/', null=True, blank=True) 
+    file = models.FileField(null=True, blank=True) 
     external_url = models.URLField(blank=True, null=True)
     description = models.TextField(blank=True)
     date = models.DateField(null=True, blank=True)
@@ -83,7 +83,7 @@ class File(models.Model):
 
 class UserProfile(models.Model):
     user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, related_name='profile')
-    profile_image = models.ImageField(upload_to='profile_images/', null=True, blank=True)
+    profile_image_url = models.URLField(max_length=500, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):

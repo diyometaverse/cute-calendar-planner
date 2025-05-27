@@ -50,12 +50,11 @@
   <div class="cute-card">
    
 
-    <!-- 🖼️ Image section with fixed height -->
-   <div class="w-full h-[250px] bg-pink-50 rounded-lg overflow-hidden flex items-center justify-center">
+   <!-- 🖼️ Image section with fixed height -->
+<div class="w-full h-[250px] bg-pink-50 rounded-lg overflow-hidden flex items-center justify-center">
   {% if file.file_ext in ".jpg,.jpeg,.png,.gif" %}
-    <a href="{{ file.file.url }}" target="_blank" class="w-full h-full">
-      <img src="{{ file.file.url }}"
-           alt="Preview"
+    <a href="{{ file.external_url }}" target="_blank" class="w-full h-full">
+      <img src="{{ file.external_url }}"
            class="w-full h-full object-cover rounded-lg cursor-zoom-in hover:opacity-75 transition-opacity">
     </a>
 
@@ -75,7 +74,9 @@
     </a>
 
   {% else %}
-    <svg data-lucide="file" class="w-12 h-12 text-gray-400"></svg>
+    <a href="{{ file.external_url }}" target="_blank">
+      <svg data-lucide="file" class="w-12 h-12 text-gray-400"></svg>
+    </a>
   {% endif %}
 </div>
     <!-- 📄 File Info -->
