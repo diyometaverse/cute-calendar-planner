@@ -43,7 +43,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'planner',
+    'social_django'
 ]
+
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.google.GoogleOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+)
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -53,9 +59,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'planner.middleware.RequireLoginMiddleware'
+    # 'planner.middleware.RequireLoginMiddleware',
+    'social_django.middleware.SocialAuthExceptionMiddleware',
 ]
-
 ROOT_URLCONF = 'project_calendar.urls'
 
 TEMPLATES = [
@@ -144,3 +150,23 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'uploads')
 CSRF_TRUSTED_ORIGINS = [
     'https://web-production-02603.up.railway.app',
 ]
+
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'planner:dashboard'
+LOGOUT_URL = 'logout'
+LOGOUT_REDIRECT_URL = 'login'
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = env('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = env('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET')
+
+SOCIAL_AUTH_PIPELINE = (
+    'social_core.pipeline.social_auth.social_details',
+    'social_core.pipeline.social_auth.social_uid',
+    'social_core.pipeline.social_auth.auth_allowed',
+    'social_core.pipeline.social_auth.social_user',
+    'planner.pipeline.reject_unknown_user',
+)
+
+SOCIAL_AUTH_ASSOCIATE_BY_EMAIL = False
+SOCIAL_AUTH_GOOGLE_OAUTH2_AUTO_CREATE_USERS = False
+SOCIAL_AUTH_LOGIN_ERROR_URL = '/login-error/'

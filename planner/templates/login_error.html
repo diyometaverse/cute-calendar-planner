@@ -1,0 +1,54 @@
+<!-- templates/login_error.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Denied – Cute Planner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(to bottom, #fff5f7, #fff);
+            min-height: 100vh;
+        }
+        .decoration {
+            position: fixed;
+            animation: float 3s ease-in-out infinite;
+            user-select: none;
+            pointer-events: none;
+            font-size: 1.5rem;
+            opacity: 0.5;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Decorative elements -->
+    <div class="decoration top-10 left-10">❤️</div>
+    <div class="decoration top-20 right-20">✨</div>
+    <div class="decoration bottom-10 left-20">❤️</div>
+    <div class="decoration bottom-20 right-10">✨</div>
+
+    <div class="flex min-h-screen items-center justify-center p-4">
+        <div class="w-full max-w-md text-center space-y-6">
+            <div class="text-6xl">🚫</div>
+            <h1 class="text-2xl font-bold text-pink-600">Access Denied</h1>
+            <p class="text-gray-600">Sorry, this account is not authorized to use this app.</p>
+            <div class="pt-4">
+                <a href="{% url 'login' %}" 
+                   class="inline-flex items-center gap-2 px-6 py-3 bg-pink-500 hover:bg-pink-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                    </svg>
+                    <span>Back to Login</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
