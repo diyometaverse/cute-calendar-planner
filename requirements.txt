@@ -33,7 +33,6 @@ hyperframe==6.1.0
 idna==3.10
 iniconfig==2.1.0
 multidict==6.4.4
-mysqlclient==2.2.7
 oauthlib==3.2.2
 packaging==25.0
 pillow==11.2.1
